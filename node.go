@@ -17,14 +17,42 @@ type NodeObj struct {
 func (n NodeObj) WriteXML(writer io.Writer) error {
 	writer.Write([]byte("<"))
 	writer.Write([]byte(n.Name.String()))
+	writer.Write([]byte(n.Attrs.String()))
 	if len(n.Children) < 1 {
 		writer.Write([]byte("/>"))
 	} else {
 		writer.Write([]byte(">"))
-    for _, child := range n.Children
+    for _, child := range n.Children {
+      child.WriteXML(writer)
+    }
 		writer.Write([]byte("</"))
 		writer.Write([]byte(n.Name.String()))
 		writer.Write([]byte(">"))
 	}
 	return nil
 }
+
+type CommentNode string
+
+func (c CommentNode) WriteXML(writer io.Writer) error {
+  writer.Write([]byte("<!--" + c + "-->"))
+}
+
+type CharDataNode string
+
+func (c CharDataNode) WriteXML(writer io.Writer) error {
+  writer.Write([]byte(c))
+}
+
+type ProcInstNode struct {
+  Target string
+  Inst string
+}
+
+func (p ProcInstNode) WriteXML(writer io.Writer) {
+  writer.Write([]byte("<?" + p.Target + " " + p.Inst + "?>"))
+}
+
+
+
+

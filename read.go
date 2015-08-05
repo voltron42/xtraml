@@ -5,7 +5,8 @@ import (
 )
 
 func ReadXML(reader io.Reader, ptr interface{}) error {
-	// TODO:
+	start, err := first(reader)
+	
 	return nil
 }
 
