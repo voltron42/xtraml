@@ -22,9 +22,9 @@ func (n NodeObj) WriteXML(writer io.Writer) error {
 		writer.Write([]byte("/>"))
 	} else {
 		writer.Write([]byte(">"))
-    for _, child := range n.Children {
-      child.WriteXML(writer)
-    }
+		for _, child := range n.Children {
+			child.WriteXML(writer)
+		}
 		writer.Write([]byte("</"))
 		writer.Write([]byte(n.Name.String()))
 		writer.Write([]byte(">"))
@@ -35,24 +35,23 @@ func (n NodeObj) WriteXML(writer io.Writer) error {
 type CommentNode string
 
 func (c CommentNode) WriteXML(writer io.Writer) error {
-  writer.Write([]byte("<!--" + c + "-->"))
+	writer.Write([]byte("<!--" + c + "-->"))
+	return nil
 }
 
 type CharDataNode string
 
 func (c CharDataNode) WriteXML(writer io.Writer) error {
-  writer.Write([]byte(c))
+	writer.Write([]byte(c))
+	return nil
 }
 
 type ProcInstNode struct {
-  Target string
-  Inst string
+	Target string
+	Inst   string
 }
 
-func (p ProcInstNode) WriteXML(writer io.Writer) {
-  writer.Write([]byte("<?" + p.Target + " " + p.Inst + "?>"))
+func (p ProcInstNode) WriteXML(writer io.Writer) error {
+	writer.Write([]byte("<?" + p.Target + " " + p.Inst + "?>"))
+	return nil
 }
-
-
-
-
