@@ -1,6 +1,9 @@
 package xtraml
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 var registry map[string]RegisteredType
 
@@ -37,7 +40,16 @@ func fromType(t reflect.Type) RegisteredType {
 	return RegisteredType{}
 }
 
+func fromStructField(field StructField) (XtraMLTag, error) {
+	x := XtraMLTag{}
+	x.Type = getKey(field.Type)
+	x.IsArray = field.Type.Kind() == reflect.Array || field.Type.Kind() == reflect.Slice
+	
+	return x, nil
+}
+
 type XtraMLTag struct {
+	Type string
 	IsArray  bool
 	NodeType NodeType
 	Types    map[string]string
@@ -53,3 +65,12 @@ const (
 	CommentType
 	ProcInstType
 )
+
+var types = map[string]NodeType{
+	"name":NodeNameType,
+	"obj":NodeObjType,
+	"attr":AttrType,
+	"chardata":CharDataType,
+	"comment":CommentType,
+	"procinst":ProcInstType,
+}
