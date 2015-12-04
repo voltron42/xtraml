@@ -25,6 +25,7 @@ func (c ChoiceParser) ParseList(d *xml.Decoder, start xml.StartElement, append f
 		}
 		next, ok := token.(xml.StartElement)
 		if ok {
+			fmt.Printf("next: %v\n", next.Name)
 			item, err := c.Parse(d, next)
 			if err != nil {
 				return err
