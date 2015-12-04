@@ -1,12 +1,14 @@
 package main
 
 import (
+	"../choice"
 	"encoding/xml"
+	"errors"
 	"fmt"
 )
 
 func main() {
-	bytes := []byte("<q text=\"q1\"><yes><a text=\"a1\"/></yes><no><q test=\"q1\"><yes><a text=\"a2\"/></yes><no><a text=\"a3\"/></no></q></no></q>")
+	bytes := []byte("<q text=\"q1\"><yes><a text=\"a1\"/></yes><no><q text=\"q2\"><yes><a text=\"a2\"/></yes><no><a text=\"a3\"/></no></q></no></q>")
 	q := Question{}
 	err := xml.Unmarshal(bytes, &q)
 	if err != nil {
@@ -25,21 +27,28 @@ type NodeWrapper struct {
 	Node
 }
 
-func (n NodeWrapper) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	fmt.Printf("name: %v:%v\n", start.Name.Space, start.Name.Local)
-	token, err := d.Token()
-	if err != nil {
-		return err
-	}
-	fmt.Printf("token: %v", token)
-	node, ok := token.(xml.StartElement)
-	if !ok {
-		return errors.New("Wrapped Node contains no elements")
-	}
-	return nil
-}
-func (n NodeWrapper) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	return e.EncodeElement(n.Node, start)
+var choiceParser = choice.ChoiceParser(map[string]func(d *xml.Decoder, start xml.StartElement) (interface{}, error){
+	"q": func(d *xml.Decoder, start xml.StartElement) (interface{}, error) {
+		q := Question{}
+		err := d.DecodeElement(&q, &start)
+		return q, err
+	},
+	"a": func(d *xml.Decoder, start xml.StartElement) (interface{}, error) {
+		a := Answer{}
+		err := d.DecodeElement(&a, &start)
+		return a, err
+	},
+})
+
+func (n *NodeWrapper) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	return choiceParser.ParseList(d, start, func(item interface{}) error {
+		node, ok := item.(Node)
+		if !ok {
+			return errors.New("Item is not a valid Node.")
+		}
+		n.Node = node
+		return nil
+	})
 }
 
 type Question struct {
