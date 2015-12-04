@@ -27,7 +27,7 @@ type NodeWrapper struct {
 	Node
 }
 
-var choiceParser = choice.ChoiceParser(map[string]func(d *xml.Decoder, start xml.StartElement) (interface{}, error){
+var choiceParser = choice.ChoiceParser{
 	"q": func(d *xml.Decoder, start xml.StartElement) (interface{}, error) {
 		q := Question{}
 		err := d.DecodeElement(&q, &start)
@@ -38,7 +38,7 @@ var choiceParser = choice.ChoiceParser(map[string]func(d *xml.Decoder, start xml
 		err := d.DecodeElement(&a, &start)
 		return a, err
 	},
-})
+}
 
 func (n *NodeWrapper) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return choiceParser.ParseList(d, start, func(item interface{}) error {
