@@ -1,9 +1,8 @@
 package main
 
 import (
-	"../choice"
+	"../"
 	"encoding/xml"
-	"errors"
 	"fmt"
 )
 
@@ -15,6 +14,11 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("%v\n", q)
+	bytes, err = xml.MarshalIndent(q, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(bytes))
 }
 
 type Node interface {
@@ -24,34 +28,25 @@ type Node interface {
 }
 
 type NodeWrapper struct {
-	Node
+	Node Node
 }
 
 var choiceParser = choice.ChoiceParser{
-	"q": func(d *xml.Decoder, start xml.StartElement) (interface{}, error) {
-		q := Question{}
-		err := d.DecodeElement(&q, &start)
-		return q, err
+	"q": func() interface{} {
+		return &Question{}
 	},
-	"a": func(d *xml.Decoder, start xml.StartElement) (interface{}, error) {
-		a := Answer{}
-		err := d.DecodeElement(&a, &start)
-		return a, err
+	"a": func() interface{} {
+		return &Answer{}
 	},
 }
 
 func (n *NodeWrapper) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	return choiceParser.ParseList(d, start, func(item interface{}) error {
-		node, ok := item.(Node)
-		if !ok {
-			return errors.New("Item is not a valid Node.")
-		}
-		n.Node = node
-		return nil
-	})
+	var node *Node
+	return choiceParser.ParseList(d, start, &n.Node, node, choice.Set)
 }
 
 type Question struct {
+	XMLName   xml.Name    `xml:"q"`
 	TextField string      `xml:"text,attr"`
 	YesField  NodeWrapper `xml:"yes"`
 	NoField   NodeWrapper `xml:"no"`
@@ -70,7 +65,8 @@ func (q Question) No() Node {
 }
 
 type Answer struct {
-	TextField string `xml:"text,attr"`
+	XMLName   xml.Name `xml:"a"`
+	TextField string   `xml:"text,attr"`
 }
 
 func (a Answer) Text() string {
