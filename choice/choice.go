@@ -39,7 +39,6 @@ func (c ChoiceParser) Parse(d *xml.Decoder, start xml.StartElement) (interface{}
 func (c ChoiceParser) ParseList(d *xml.Decoder, start xml.StartElement, containerPtr interface{}, typeofPtr interface{}, appenderType appender) error {
 	typeof := reflect.TypeOf(typeofPtr).Elem()
 	container := reflect.ValueOf(containerPtr).Elem()
-	fmt.Printf("start: %v\n", start.Name)
 	token, err := d.Token()
 	for token != start.End() {
 		if err != nil {
@@ -47,7 +46,6 @@ func (c ChoiceParser) ParseList(d *xml.Decoder, start xml.StartElement, containe
 		}
 		next, ok := token.(xml.StartElement)
 		if ok {
-			fmt.Printf("next: %v\n", next.Name)
 			item, err := c.Parse(d, next)
 			if err != nil {
 				return err
@@ -62,4 +60,24 @@ func (c ChoiceParser) ParseList(d *xml.Decoder, start xml.StartElement, containe
 		token, err = d.Token()
 	}
 	return nil
+}
+
+func WrapList(e *xml.Encoder, listName xml.Name, list interface{}) error {
+	listVal := reflect.ValueOf(list)
+	token := xml.StartElement{
+		Name: listName,
+	}
+	err := e.EncodeToken(token)
+	if err != nil {
+		return err
+	}
+	count := listVal.Len()
+	for index := 0; index < count; index++ {
+		err = e.Encode(listVal.Index(index).Interface())
+		if err != nil {
+			return err
+		}
+	}
+	return e.EncodeToken(token.End())
+
 }

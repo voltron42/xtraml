@@ -49,23 +49,7 @@ func (p *List) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 }
 
 func (p List) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
-	fmt.Printf("start: %v\n", start)
-	token := xml.StartElement{
-		Name: xml.Name{
-			Local: "list",
-		},
-	}
-	err := e.EncodeToken(token)
-	if err != nil {
-		return err
-	}
-	for _, item := range p {
-		err = e.Encode(item)
-		if err != nil {
-			return err
-		}
-	}
-	return e.EncodeToken(token.End())
+	return choice.WrapList(e, xml.Name{Local: "list"}, p)
 }
 
 type Item interface {
